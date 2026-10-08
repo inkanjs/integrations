@@ -24,8 +24,23 @@ import { serve } from "@inkanjs/uws";
 
 const app = inkan().get("/hello", () => ({ hello: "world" }));
 const server = await serve(app, { port: 3000 });
-// later: await server.close();   stops taking requests, then runs onClose
+server.url; // "http://localhost:3000"
 ```
+
+| option | default | |
+| --- | --- | --- |
+| `port` | `$PORT`, then 3000 | 0 takes any free port; `server.port` says which |
+| `host` | `"0.0.0.0"` | |
+| `tls` | none | `{ key, cert, passphrase? }`, paths to PEM files: HTTPS, on uWS's own TLS |
+| `signals` | the app's `gracefulShutdown` | on SIGINT or SIGTERM, close and exit; a second one exits at once |
+| `drain` | 10 000 | how long `close()` waits for open requests, in ms |
+
+## Closing
+
+`await server.close()` closes as `app.listen()` does on a ctrl+c: it stops taking requests,
+lets the open ones finish, ends the event streams (an endless one would otherwise keep it
+waiting for as long as its client stays), and then runs the app's onClose hooks. After
+`drain` milliseconds whatever is left is closed anyway.
 
 ## What is the same, what is not
 
