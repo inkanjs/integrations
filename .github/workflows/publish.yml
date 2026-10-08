@@ -1,8 +1,8 @@
 name: publish
 
 # A GitHub release publishes one package: the tag names it and its version, as
-# `next-v0.1.0` for packages/next at 0.1.0. npmjs.com trusts this workflow per package
-# (trusted publishing, with provenance), so no token is involved.
+# `next-v0.1.0` for packages/next at 0.1.0. It goes to npmjs.com, which trusts this workflow
+# per package (trusted publishing, with provenance, no token), and to GitHub Packages.
 
 on:
   release:
@@ -40,3 +40,28 @@ jobs:
       - run: npm run typecheck
       - run: npm test -w packages/${{ steps.tag.outputs.pkg }}
       - run: npm publish -w packages/${{ steps.tag.outputs.pkg }} --access public --ignore-scripts
+
+  # the same package on GitHub Packages, next to the repository; its name already has the
+  # organisation's scope, which GitHub Packages asks for
+  github-packages:
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          registry-url: https://npm.pkg.github.com
+          scope: "@inkanjs"
+      - name: the package the tag names
+        id: tag
+        run: echo "pkg=${TAG%-v*}" >> "$GITHUB_OUTPUT"
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+      - run: npm publish -w packages/${{ steps.tag.outputs.pkg }} --ignore-scripts
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
