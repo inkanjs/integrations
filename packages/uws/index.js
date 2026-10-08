@@ -23,7 +23,9 @@ export async function serve(app, options = {}) {
   const { port = Number(process.env.PORT ?? 3000), host = "0.0.0.0", tls, drain = 10_000 } = options;
   const signals = options.signals ?? app.options.gracefulShutdown;
   await app.ready();
-  const limit = app.options.bodyLimit;
+  // how a request's body is read: the route's own limit, and whether it takes the body unread
+  // (inkan 0.5 and later; before that, the app's limit for every route)
+  const bodyFor = app.bodyFor ? (method, url) => app.bodyFor(method, url) : () => ({ limit: app.options.bodyLimit, stream: false });
 
   // what is still being answered: close() waits for the requests, and ends the streams,
   // which would otherwise keep it waiting for as long as a client stays
@@ -48,6 +50,10 @@ export async function serve(app, options = {}) {
     let gone = false;
     let over = false;
     let answer;
+    // a body handed over unread: who waits for its next chunk, whether the socket is paused, whether the rest is let go
+    let wake;
+    let paused = false;
+    let dropped = false;
     const end = () => {
       if (over) return;
       over = true;
@@ -56,12 +62,15 @@ export async function serve(app, options = {}) {
     res.onAborted(() => {
       gone = true;
       answer?.abort?.abort(); // the client went away: tell the source, so it stops producing
+      wake?.(); // and a handler still reading the body, so it stops waiting
       if (!answer?.stream) end(); // a stream ends itself once the source has stopped
     });
 
     const hasBody = method !== "GET" && method !== "HEAD" && (headers["content-length"] !== undefined || headers["transfer-encoding"] !== undefined);
     if (!hasBody) return void exchange(undefined);
+    const { limit, stream: unread } = bodyFor(method, url);
     if (Number(headers["content-length"] ?? 0) > limit) return tooLarge();
+    if (unread) return void exchange(undefined, bodyStream());
     const chunks = [];
     let size = 0;
     res.onData((ab, last) => {
@@ -72,6 +81,52 @@ export async function serve(app, options = {}) {
       if (last) exchange(Buffer.concat(chunks));
     });
 
+    // The body as it arrives, for a route that takes it unread (t.stream()): inkan reads it
+    // chunk by chunk and holds it to the route's limit. When the handler falls behind, the
+    // socket is paused until it catches up; what it leaves unread is let go.
+    function bodyStream() {
+      const queue = [];
+      let ended = false;
+      const pause = (yes) => {
+        if (paused === yes || gone || over) return;
+        paused = yes;
+        yes ? res.pause() : res.resume();
+      };
+      res.onData((ab, last) => {
+        if (last) ended = true;
+        if (dropped) return;
+        if (ab.byteLength) queue.push(Buffer.from(new Uint8Array(ab))); // a copy: uWS takes the memory back after this call
+        if (queue.length >= 16) pause(true);
+        wake?.();
+      });
+      return {
+        async *[Symbol.asyncIterator]() {
+          try {
+            for (;;) {
+              if (queue.length) {
+                const chunk = queue.shift();
+                if (queue.length < 4) pause(false);
+                yield chunk;
+              } else if (ended) return;
+              else if (gone) throw new Error("the client went away before the body was whole");
+              else await new Promise((resolve) => (wake = resolve));
+            }
+          } finally {
+            letGo();
+          }
+        },
+      };
+    }
+    // nobody reads the rest of the body: drop it as it comes, and keep the socket reading
+    function letGo() {
+      dropped = true;
+      wake = undefined;
+      if (paused && !gone && !over) {
+        paused = false;
+        res.resume();
+      }
+    }
+
     function tooLarge() {
       if (gone) return;
       gone = true;
@@ -80,15 +135,16 @@ export async function serve(app, options = {}) {
       end();
     }
 
-    async function exchange(body) {
+    async function exchange(body, stream) {
       try {
-        answer = await app.exchange({ method, url, headers, body, remote });
+        answer = await app.exchange({ method, url, headers, body, stream, remote });
       } catch (err) {
         console.error(err);
         answer = { status: 500, headers: { "content-type": "application/problem+json" }, body: JSON.stringify({ type: "internal", title: STATUS_CODES[500], status: 500 }) };
       }
       if (gone) return void answer.abort?.abort();
-      if (answer.stream) return void stream(answer);
+      letGo();
+      if (answer.stream) return void streamOut(answer);
       res.cork(() => {
         head(answer);
         const length = answer.headers["content-length"];
@@ -104,9 +160,11 @@ export async function serve(app, options = {}) {
       res.writeStatus(`${a.status} ${STATUS_CODES[a.status] ?? ""}`);
       // uWS writes the length itself, and the connection is its business
       for (const [k, v] of Object.entries(a.headers)) if (k !== "content-length" && k !== "connection") res.writeHeader(k, v);
+      // one Set-Cookie per cookie, never joined into one (inkan 0.6 and later)
+      for (const cookie of a.cookies ?? []) res.writeHeader("set-cookie", cookie);
     }
 
-    async function stream(a) {
+    async function streamOut(a) {
       let stopped = false;
       const stop = () => {
         stopped = true;

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0
+
+- A route's own `bodyLimit` holds, through `app.bodyFor()` (inkan 0.5 and later): 413 past
+  it, declared or chunked, in the problem shape inkan answers with.
+- A `t.stream()` route gets its body unread, as it arrives, instead of buffered; the socket
+  is paused while the handler falls behind.
+- Cookies on the answer (inkan 0.6 and later) go out as one `Set-Cookie` header each.
+
 ## 0.2.0
 
 - `close()` closes gently: it stops taking requests, lets the open ones finish, ends the
