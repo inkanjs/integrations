@@ -1,6 +1,6 @@
 {
   "name": "@inkanjs/query",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "The typed inkan client for TanStack Query: data typed from the contract, problems as errors. React, Vue, Svelte, Solid.",
   "type": "module",
   "license": "MIT",
@@ -28,7 +28,8 @@
   "files": [
     "index.js",
     "index.d.ts",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md"
   ],
   "engines": {
     "node": ">=22.18"
