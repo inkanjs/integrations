@@ -12,7 +12,8 @@
   },
   "scripts": {
     "typecheck": "tsc",
-    "test": "npm test --workspaces --if-present"
+    "test": "npm test --workspaces --if-present",
+    "publish:all": "npm run typecheck && npm test && npm publish --workspaces --access public"
   },
   "devDependencies": {
     "@types/node": "^26.6.4",
