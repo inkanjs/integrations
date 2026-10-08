@@ -26,4 +26,5 @@ MIT licensed.
 ## Releasing a package
 
 A GitHub release with the tag `<package>-v<version>`, as `next-v0.1.0`, publishes that one
-package from `packages/<package>`, after its tests, with provenance.
+package from `packages/<package>`, after its tests: to npmjs.com with provenance, and to
+GitHub Packages.
