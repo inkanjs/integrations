@@ -187,6 +187,32 @@ if (installed) {
       await server.close();
     }
   });
+
+  // cookies on AdapterResponse came with inkan 0.6.0: an older one has nothing to write
+  const probe = await inkan({ log: false })
+    .get("/", (ctx) => ((ctx as unknown as { setCookie?: (n: string, v: string) => void }).setCookie?.("a", "1"), {}))
+    .exchange({ method: "GET", url: "/", headers: {} });
+  const cookies = Array.isArray((probe as { cookies?: string[] }).cookies);
+  test("two cookies arrive as two Set-Cookie headers (needs inkan 0.6, skipped before)", { timeout: 20_000, skip: !cookies && "the installed inkan has no cookies on AdapterResponse" }, async () => {
+    const app = inkan({ log: false, gracefulShutdown: false }).post("/login", (ctx) => {
+      const set = (ctx as unknown as { setCookie: (n: string, v: string, o?: object) => void }).setCookie;
+      set("sid", "abc", { httpOnly: true, path: "/" });
+      set("theme", "dark");
+      return { ok: true };
+    });
+    const server = await serve(app, { port: 0, host: "127.0.0.1" });
+    try {
+      const r = await fetch(`${server.url}/login`, { method: "POST" });
+      assert.equal(r.status, 200);
+      const set = r.headers.getSetCookie();
+      assert.equal(set.length, 2);
+      assert.match(set[0], /^sid=abc/);
+      assert.match(set[0], /HttpOnly/i);
+      assert.match(set[1], /^theme=dark/);
+    } finally {
+      await server.close();
+    }
+  });
 } else if (process.env.REQUIRE_UWS) {
   throw new Error("uWebSockets.js is not installed, and REQUIRE_UWS says this test has to run");
 } else {

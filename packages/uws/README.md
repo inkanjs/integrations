@@ -35,13 +35,14 @@ server.url; // "http://localhost:3000"
 | `signals` | the app's `gracefulShutdown` | on SIGINT or SIGTERM, close and exit; a second one exits at once |
 | `drain` | 10 000 | how long `close()` waits for open requests, in ms |
 
-## Bodies
+## Bodies and cookies
 
 A body is held to its route's own `bodyLimit` (or the app's), with the same 413 problem
 `app.listen()` answers, whether the length is declared or the body comes chunked. A
 `t.stream()` route gets its body unread, chunk by chunk as it arrives; when the handler
 falls behind, the socket is paused until it catches up. Both need inkan 0.5 or later; with
-an older one every route has the app's limit.
+an older one every route has the app's limit. Cookies a handler sets (inkan 0.6 and later)
+go out as one `Set-Cookie` header each.
 
 ## Closing
 

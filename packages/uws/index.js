@@ -160,6 +160,8 @@ export async function serve(app, options = {}) {
       res.writeStatus(`${a.status} ${STATUS_CODES[a.status] ?? ""}`);
       // uWS writes the length itself, and the connection is its business
       for (const [k, v] of Object.entries(a.headers)) if (k !== "content-length" && k !== "connection") res.writeHeader(k, v);
+      // one Set-Cookie per cookie, never joined into one (inkan 0.6 and later)
+      for (const cookie of a.cookies ?? []) res.writeHeader("set-cookie", cookie);
     }
 
     async function streamOut(a) {
