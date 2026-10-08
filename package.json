@@ -1,0 +1,21 @@
+{
+  "name": "inkanjs-integrations",
+  "private": true,
+  "description": "inkan where you already are: Next.js, Vite, TanStack Query and more, one package each.",
+  "type": "module",
+  "license": "MIT",
+  "workspaces": [
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "typecheck": "tsc",
+    "test": "npm test --workspaces --if-present"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "typescript": "^7.0.2"
+  }
+}

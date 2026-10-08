@@ -1,0 +1,17 @@
+{
+  "name": "@inkanjs/vite",
+  "version": "0.1.0",
+  "description": "Your inkan API inside the Vite dev server: one port, reloaded on every save, /docs next to your frontend.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Vensin (https://github.com/vxnsin)",
+  "repository": { "type": "git", "url": "git+https://github.com/inkanjs/integrations.git", "directory": "packages/vite" },
+  "keywords": ["inkan", "vite", "vite-plugin", "api", "vue", "react", "svelte", "solid"],
+  "exports": { ".": { "types": "./index.d.ts", "default": "./index.js" } },
+  "files": ["index.js", "index.d.ts", "README.md"],
+  "engines": { "node": ">=22.18" },
+  "peerDependencies": { "@vxnsin/inkan": ">=0.4.0", "vite": ">=5" },
+  "devDependencies": { "@vxnsin/inkan": "^0.4.0" },
+  "scripts": { "test": "node --test test.ts" },
+  "publishConfig": { "access": "public" }
+}

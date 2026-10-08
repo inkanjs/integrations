@@ -1,0 +1,49 @@
+{
+  "name": "@inkanjs/query",
+  "version": "0.1.0",
+  "description": "The typed inkan client for TanStack Query: data typed from the contract, problems as errors. React, Vue, Svelte, Solid.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Vensin (https://github.com/vxnsin)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/inkanjs/integrations.git",
+    "directory": "packages/query"
+  },
+  "keywords": [
+    "inkan",
+    "tanstack-query",
+    "react-query",
+    "vue-query",
+    "svelte-query",
+    "solid-query",
+    "typed-client"
+  ],
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    }
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22.18"
+  },
+  "peerDependencies": {
+    "@vxnsin/inkan": ">=0.4.0"
+  },
+  "devDependencies": {
+    "@tanstack/query-core": "^5.104.1",
+    "@vxnsin/inkan": "^0.4.0"
+  },
+  "scripts": {
+    "test": "node --test test.ts"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

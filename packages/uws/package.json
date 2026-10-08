@@ -1,0 +1,52 @@
+{
+  "name": "@inkanjs/uws",
+  "version": "0.1.0",
+  "description": "Runs an inkan app on uWebSockets.js instead of node:http.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Vensin (https://github.com/vxnsin)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/inkanjs/integrations.git",
+    "directory": "packages/uws"
+  },
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    }
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22.18"
+  },
+  "peerDependencies": {
+    "@vxnsin/inkan": ">=0.4.0",
+    "uWebSockets.js": ">=20.71.0"
+  },
+  "scripts": {
+    "test": "node --test --test-timeout=20000 test.ts"
+  },
+  "peerDependenciesMeta": {
+    "uWebSockets.js": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@vxnsin/inkan": "^0.4.0"
+  },
+  "keywords": [
+    "inkan",
+    "uwebsockets",
+    "uws",
+    "adapter",
+    "fast"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}
