@@ -1,6 +1,6 @@
 {
   "name": "@inkanjs/uws",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Runs an inkan app on uWebSockets.js instead of node:http.",
   "type": "module",
   "license": "MIT",
@@ -38,7 +38,7 @@
     }
   },
   "devDependencies": {
-    "@vxnsin/inkan": "^0.5.0"
+    "@vxnsin/inkan": "^0.6.0"
   },
   "keywords": [
     "inkan",

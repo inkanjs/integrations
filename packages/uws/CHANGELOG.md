@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.0 (not released yet)
+## 0.3.0
 
 - A route's own `bodyLimit` holds, through `app.bodyFor()` (inkan 0.5 and later): 413 past
   it, declared or chunked, in the problem shape inkan answers with.
