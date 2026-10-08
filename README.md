@@ -10,7 +10,7 @@ on its own; inkan itself keeps no dependencies.
 | [`@inkanjs/query`](packages/query) | The typed client for TanStack Query: data typed from the contract, problems as errors. |
 | [`@inkanjs/uws`](packages/uws) | An inkan app on uWebSockets.js instead of node:http. |
 
-Nuxt, SvelteKit, Astro and Remix need no package: they hand their server routes a web
+Nuxt, SvelteKit, Astro and Remix need no package, see the [recipes](recipes): they hand their server routes a web
 `Request` and want a `Response`, which is what `app.fetch` does.
 
 Every package is tested against the published `@vxnsin/inkan` in CI, on Node 22, 24 and 26:
@@ -22,3 +22,8 @@ npm test
 ```
 
 MIT licensed.
+
+## Releasing a package
+
+A GitHub release with the tag `<package>-v<version>`, as `next-v0.1.0`, publishes that one
+package from `packages/<package>`, after its tests, with provenance.

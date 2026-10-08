@@ -1,0 +1,42 @@
+name: publish
+
+# A GitHub release publishes one package: the tag names it and its version, as
+# `next-v0.1.0` for packages/next at 0.1.0. npmjs.com trusts this workflow per package
+# (trusted publishing, with provenance), so no token is involved.
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - name: the tag names a package and its version
+        id: tag
+        run: |
+          tag="${TAG}"
+          pkg="${tag%-v*}"
+          version="${tag##*-v}"
+          if [ ! -f "packages/$pkg/package.json" ]; then echo "::error::no package called $pkg"; exit 1; fi
+          have="$(node -p "require('./packages/$pkg/package.json').version")"
+          if [ "$have" != "$version" ]; then echo "::error::$tag, but packages/$pkg is at $have"; exit 1; fi
+          echo "pkg=$pkg" >> "$GITHUB_OUTPUT"
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+      - run: npm install --no-audit --no-fund
+      - run: npm run typecheck
+      - run: npm test -w packages/${{ steps.tag.outputs.pkg }}
+      - run: npm publish -w packages/${{ steps.tag.outputs.pkg }} --access public --ignore-scripts
