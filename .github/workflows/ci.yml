@@ -39,3 +39,19 @@ jobs:
       - run: npm test -w packages/uws
         env:
           REQUIRE_UWS: "1"
+
+  # @inkanjs/next inside a real Next.js: next build, next start, then requests against the
+  # App Router, the Pages Router and a Server Component. Next is installed for this run only.
+  next:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - run: npm install --no-audit --no-fund
+      - run: npm install --no-audit --no-fund --no-save next react react-dom
+      - run: node packages/next/e2e/run.mjs
+        env:
+          REQUIRE_NEXT: "1"
