@@ -22,5 +22,9 @@ export type ServeOptions = {
   drain?: number;
 };
 
-/** Serves an inkan app on uWebSockets.js. Resolves once it listens, after the app's plugins and onListen hooks. */
+/**
+ * Serves an inkan app on uWebSockets.js. Resolves once it listens, after the app's plugins and onListen hooks.
+ * Bodies are held to each route's limit; a `t.stream()` route gets its body
+ * unread.
+ */
 export function serve(app: App, options?: ServeOptions): Promise<Served>;
