@@ -1,7 +1,7 @@
 {
   "name": "@inkanjs/query",
-  "version": "0.2.0",
-  "description": "The typed inkan client for TanStack Query: data typed from the contract, problems as errors. React, Vue, Svelte, Solid.",
+  "version": "0.3.0",
+  "description": "The typed inkan client for TanStack Query: data typed from the contract, problems as errors, live events and WebSockets. React, Vue, Svelte, Solid.",
   "type": "module",
   "license": "MIT",
   "author": "Vensin (https://github.com/vxnsin)",
@@ -17,17 +17,25 @@
     "vue-query",
     "svelte-query",
     "solid-query",
-    "typed-client"
+    "typed-client",
+    "server-sent-events",
+    "websocket"
   ],
   "exports": {
     ".": {
       "types": "./index.d.ts",
       "default": "./index.js"
+    },
+    "./react": {
+      "types": "./react.d.ts",
+      "default": "./react.js"
     }
   },
   "files": [
     "index.js",
     "index.d.ts",
+    "react.js",
+    "react.d.ts",
     "README.md",
     "CHANGELOG.md"
   ],
@@ -35,11 +43,18 @@
     "node": ">=22.18"
   },
   "peerDependencies": {
-    "@vxnsin/inkan": ">=0.4.0"
+    "@vxnsin/inkan": ">=0.7.0",
+    "react": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@tanstack/query-core": "^5.104.1",
-    "@vxnsin/inkan": "^0.4.0"
+    "@vxnsin/inkan": "^0.7.0",
+    "react": "^19.3.0"
   },
   "scripts": {
     "test": "node --test test.ts"
