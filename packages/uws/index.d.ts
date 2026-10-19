@@ -5,7 +5,7 @@ export type Served = {
   readonly port: number;
   /** Where it listens, as a URL: `http://localhost:3000`, or https with `tls`. */
   readonly url: string;
-  /** Stops taking requests, lets the open ones finish (ends the event streams), then runs the app's onClose hooks. */
+  /** Stops taking requests, lets the open ones finish (ends the event streams, closes the WebSockets with 1001), then runs the app's onClose hooks. */
   close(): Promise<void>;
 };
 
@@ -25,6 +25,7 @@ export type ServeOptions = {
 /**
  * Serves an inkan app on uWebSockets.js. Resolves once it listens, after the app's plugins and onListen hooks.
  * Bodies are held to each route's limit; a `t.stream()` route gets its body unread; every cookie
- * the answer carries goes out as a Set-Cookie header of its own.
+ * the answer carries goes out as a Set-Cookie header of its own. WebSocket routes (`app.ws()`)
+ * run on uWS's websockets; `close()` ends them with 1001.
  */
 export function serve(app: App, options?: ServeOptions): Promise<Served>;
