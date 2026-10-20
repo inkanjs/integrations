@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.0 (unreleased)
+## 0.4.0
 
 - WebSocket routes (`app.ws()`) run on uWebSockets.js's websockets. The app decides each
   upgrade through `app.upgradeListener` (route, origin, maxConnections, hooks, security,

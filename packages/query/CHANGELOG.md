@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.0 (unreleased)
+## 0.3.0
 
 - `q.events(path, input)` and `q.ws(path, input)`: live sources for a route that answers
   with `t.events(...)` and for an `app.ws` route, typed from it. A path that is no stream
