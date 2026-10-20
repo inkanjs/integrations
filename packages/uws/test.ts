@@ -1,5 +1,5 @@
 // The same requests every way of serving inkan has to answer alike, on uWebSockets.js, and
-// what only this adapter does: closing gently, and HTTPS. uWebSockets.js is installed on
+// what only this adapter does: closing gently, HTTPS, WebSockets (websockets.ts). uWebSockets.js is installed on
 // purpose, from GitHub (see README); without it this test is skipped, unless REQUIRE_UWS
 // says it has to run, as it does in CI.
 import { test } from "node:test";
@@ -12,6 +12,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { inkan, sse, t } from "@vxnsin/inkan";
 import { conformance } from "./conformance.ts";
+import { websockets } from "./websockets.ts";
 
 /** A request body sent in pieces, chunked, with no length declared. */
 function streamOf(pieces: Iterable<string> | AsyncIterable<string>): ReadableStream<Uint8Array> {
@@ -41,6 +42,7 @@ if (installed) {
     const server = await serve(app, { port: 0, host: "127.0.0.1" });
     return { url: server.url, close: () => server.close() };
   });
+  websockets(serve);
 
   test("close() lets an open request finish, ends the streams, then runs onClose", { timeout: 20_000 }, async () => {
     const events: string[] = [];

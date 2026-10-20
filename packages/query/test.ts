@@ -1,9 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { QueryClient, MutationObserver } from "@tanstack/query-core";
-import { inkan, problem, t } from "@vxnsin/inkan";
+import { inkan, problem, sse, t } from "@vxnsin/inkan";
 import { client } from "@vxnsin/inkan/client";
-import { isProblem, mutation, ProblemError, queries, query, retry } from "./index.js";
+import { connect, follow, isProblem, mutation, ProblemError, queries, query, retry } from "./index.js";
+import type { Connection, EventsState, LiveEvents, SocketState } from "./index.js";
+import { useEvents, useSocket } from "./react.js";
+
+type EventOf<S> = S extends LiveEvents<infer E> ? E : never;
 
 const Tea = t.object({ id: t.int(), name: t.string(), brewed: t.date() });
 const teas = [{ id: 1, name: "Sencha", brewed: new Date("2026-01-02T03:04:05.000Z") }];
@@ -85,4 +89,200 @@ test("isProblem and retry tell problems that pass from those that stay", async (
   assert.equal(again(0, new TypeError("fetch failed")), true);
   assert.equal(again(0, new ProblemError({ status: 429, problem: {} })), true);
   assert.equal(again(2, down), false, "and only so often");
+});
+
+// ---- live data
+
+const Progress = t.object({ done: t.int(), total: t.int() });
+let release: () => void = () => {};
+const live = inkan({ log: false })
+  .job("/exports", { body: t.object({ rows: t.int() }), progress: Progress, result: t.object({ url: t.string() }) }, async (job) => {
+    await new Promise<void>((resolve) => (release = resolve)); // waits until someone follows it
+    for (let done = 1; done <= job.input.rows; done++) job.progress({ done, total: job.input.rows });
+    return { url: `/files/${job.id}.csv` };
+  })
+  .get("/ticks", { response: { 200: t.events({ tick: t.object({ n: t.int() }) }) } }, () =>
+    sse(async function* (signal) {
+      for (let n = 0; !signal.aborted; n++) {
+        yield { event: "tick", data: { n } };
+        await new Promise((r) => setTimeout(r, 5));
+      }
+    }),
+  )
+  .ws(
+    "/rooms/:room",
+    {
+      params: t.object({ room: t.string().min(3) }),
+      message: t.object({ type: t.literal("say"), text: t.string() }),
+      send: t.object({ type: t.literal("said"), room: t.string(), text: t.string() }),
+    },
+    (socket, ctx) => socket.on("message", (m) => void socket.send({ type: "said", room: ctx.params.room, text: m.text })),
+  );
+const api = client<typeof live>("http://live.test", { fetch: (url, init) => live.fetch(new Request(url, init)) });
+
+/** Resolves with the first state `check` accepts. */
+function until<S>(start: (onChange: (s: S) => void) => unknown, check: (s: S) => boolean, ms = 5_000): Promise<S> {
+  return new Promise((resolve, reject) => {
+    const seen: S[] = [];
+    // fail with what was seen instead of hanging the run
+    const timer = setTimeout(() => reject(new Error(`no state passed the check in ${ms} ms; seen: ${JSON.stringify(seen.map((x) => ({ ...(x as object), socket: undefined, error: (x as { error?: Error }).error?.message })))}`)), ms);
+    start((s) => {
+      seen.push(s);
+      if (check(s)) {
+        clearTimeout(timer);
+        resolve(s);
+      }
+    });
+  });
+}
+
+test("follow() follows a job: typed events, the latest of each, then closed", async () => {
+  const qc = new QueryClient();
+  const q = queries(api);
+  const started = await new MutationObserver(qc, q.post("/exports")).mutate({ body: { rows: 3 } });
+  const source = q.events("/exports/:id/events", { params: { id: started.id } });
+  assert.deepEqual(source.key, ["/exports/:id/events", { params: { id: started.id } }]);
+
+  const progress: number[] = [];
+  const statuses: string[] = [];
+  const end = await until<EventsState<EventOf<typeof source>>>(
+    (onChange) =>
+      follow(source, {
+        onChange: (s) => (statuses.push(s.status), onChange(s)),
+        onEvent: (e) => {
+          if (e.event === "status") release(); // following now: let the job run
+          if (e.event === "progress") progress.push(e.data.done); // narrowed by the name
+          // @ts-expect-error a job's stream has no such event
+          void (e.event === "tick");
+        },
+      }),
+    (s) => s.status === "closed",
+  );
+  assert.equal(statuses[0], "connecting");
+  assert.ok(statuses.includes("open"));
+  assert.equal(end.byName.end?.state, "done");
+  assert.deepEqual(end.byName.progress, { done: 3, total: 3 });
+  assert.equal(end.last?.event, "end");
+  assert.equal(progress.at(-1), 3);
+  const total: number | undefined = end.byName.progress?.total;
+  assert.equal(total, 3);
+  // @ts-expect-error progress has no percent
+  void end.byName.progress?.percent;
+
+  const result = await qc.fetchQuery(q.get("/exports/:id/result", { params: { id: started.id } }));
+  assert.equal(result.url, `/files/${started.id}.csv`);
+});
+
+test("follow() tells a stream that does not open as a ProblemError, and retries only as asked", async () => {
+  const q = queries(api);
+  const missing = q.events("/exports/:id/events", { params: { id: "nope" } });
+  let opened = 0;
+  const counted = { key: missing.key, open: (signal?: AbortSignal) => (opened++, missing.open(signal)) };
+  const failed = await until<EventsState<EventOf<typeof missing>>>(
+    (onChange) => follow(counted, { onChange, retry: retry(3), retryDelay: 0 }),
+    (s) => s.status === "error",
+  );
+  assert.ok(isProblem(failed.error) && failed.error.status === 404);
+  assert.equal(opened, 1, "a 404 is not tried again");
+
+  let tries = 0;
+  const broken = {
+    key: ["broken"],
+    open: (): AsyncIterable<{ event: "x"; data: number }> => ({
+      [Symbol.asyncIterator]: () => ({ next: () => (tries++, Promise.reject(new TypeError("fetch failed"))) }),
+    }),
+  };
+  const statuses: string[] = [];
+  const gave = await until<EventsState<{ event: "x"; data: number }>>(
+    (onChange) => follow(broken, { onChange: (s) => (statuses.push(s.status), onChange(s)), retry: 2, retryDelay: 0 }),
+    (s) => s.status === "error",
+  );
+  assert.equal(tries, 3, "once, and twice again");
+  assert.equal(gave.error?.message, "fetch failed");
+  assert.deepEqual(statuses, ["connecting", "connecting", "connecting", "error"]);
+});
+
+test("follow() stops when told to, and tells nothing after", async () => {
+  const q = queries(api);
+  const changes: string[] = [];
+  let stop = () => {};
+  await until<EventsState<{ event: "tick"; data: { n: number } }>>(
+    (onChange) => (stop = follow(q.events("/ticks"), { onChange: (s) => (changes.push(s.status), onChange(s)) })),
+    (s) => (s.byName.tick?.n ?? 0) >= 2,
+  );
+  stop();
+  const count = changes.length;
+  await new Promise((r) => setTimeout(r, 40));
+  assert.equal(changes.length, count);
+});
+
+type Say = { type: "say"; text: string };
+type Said = { type: "said"; room: string; text: string };
+
+test("connect() opens a typed WebSocket, sends before it is open, closes", { timeout: 15_000 }, async () => {
+  const server = await live.listen(0, "127.0.0.1");
+  // what the server heard, for the message when a state never comes
+  const heard: string[] = [];
+  server.on("upgrade", (req) => heard.push(`upgrade ${req.method} ${req.url} origin=${req.headers.origin ?? "-"} key=${req.headers["sec-websocket-key"] ? "yes" : "no"} v=${req.httpVersion}`));
+  server.on("request", (req) => heard.push(`request ${req.method} ${req.url} upgrade=${req.headers.upgrade ?? "-"}`));
+  try {
+    const { port } = server.address() as { port: number };
+    const q = queries(client<typeof live>(`http://127.0.0.1:${port}`));
+    const statuses: string[] = [];
+    let conn!: Connection<Say, Said>;
+    const said = await until<SocketState<Say, Said>>(
+      (onChange) => {
+        conn = connect(q.ws("/rooms/:room", { params: { room: "tea" } }), { onChange: (s) => (statuses.push(s.status), onChange(s)) });
+        conn.send({ type: "say", text: "hello" }); // still opening: goes once it is open
+        // @ts-expect-error the route takes a say
+        void (() => conn.send({ type: "shout", text: "x" }));
+      },
+      (s) => s.last !== undefined,
+    ).catch((err: Error) => {
+      throw new Error(`${err.message}; server heard: ${JSON.stringify(heard)}; socket readyState=${conn?.socket.raw.readyState}; listeners=${server.listenerCount("upgrade")}`);
+    });
+    assert.deepEqual(said.last, { type: "said", room: "tea", text: "hello" });
+    assert.deepEqual(statuses.slice(0, 2), ["connecting", "open"]);
+    conn.close();
+
+    const refused = await until<SocketState<Say, Said>>(
+      (onChange) => connect(q.ws("/rooms/:room", { params: { room: "x" } }), { onChange }),
+      (s) => s.status !== "connecting",
+    );
+    assert.equal(refused.status, "error", "a room name too short is a 400, and no socket");
+  } finally {
+    // an upgraded socket is no longer the http server's: close it through the app first, or
+    // server.close() waits for it (forever, on Node 22)
+    await live.stopped();
+    server.closeAllConnections();
+    await new Promise((r) => server.close(r));
+  }
+});
+
+test("the React hooks are typed from the route", () => {
+  // types only: running them takes a renderer; follow() and connect() above are what they run
+  const q = queries(api);
+  const component = () => {
+    const job = useEvents(q.events("/exports/:id/events", { params: { id: "1" } }), { retry: retry(2), onEvent: (e) => void e.event });
+    const done: number | undefined = job.byName.progress?.done;
+    const state: string | undefined = job.byName.end?.state;
+    if (job.last?.event === "progress") void (job.last.data.total satisfies number);
+    const status: "idle" | "connecting" | "open" | "closed" | "error" = job.status;
+    // @ts-expect-error the events route needs its id
+    void (() => useEvents(q.events("/exports/:id/events")));
+    // @ts-expect-error a GET that is not a stream
+    void (() => q.events("/exports/:id", { params: { id: "1" } }));
+
+    const room = useSocket(q.ws("/rooms/:room", { params: { room: "tea" } }), { enabled: true, onMessage: (m) => void m.text });
+    room.send({ type: "say", text: "hi" });
+    // @ts-expect-error the route takes a text
+    room.send({ type: "say" });
+    const text: string | undefined = room.last?.text;
+    // @ts-expect-error there is no such WebSocket route
+    void (() => q.ws("/lobby"));
+    return [done, state, status, text, room.socket?.raw];
+  };
+  assert.equal(typeof component, "function");
+  assert.equal(typeof useEvents, "function");
+  assert.equal(typeof useSocket, "function");
 });

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.0
+
+- WebSocket routes (`app.ws()`) run on uWebSockets.js's websockets. The app decides each
+  upgrade through `app.upgradeListener` (route, origin, maxConnections, hooks, security,
+  input, handshake timeout) and runs the socket; uWS carries the frames. Same handler, same
+  socket, same close codes as `app.listen()`, within the limits the README lists: a message
+  past the largest route's `maxMessage` is cut off by uWS (1006, not 1009).
+- `close()` closes the WebSockets with 1001 before the onClose hooks.
+- Needs inkan 0.8 (peer `>=0.8.0 <1.0.0`).
+
 ## 0.3.0
 
 - A route's own `bodyLimit` holds, through `app.bodyFor()` (inkan 0.5 and later): 413 past

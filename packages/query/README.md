@@ -63,3 +63,88 @@ useMutation(mutation((tea: { name: string }) => shop.post("/teas", { body: tea }
 
 `unwrap(answer)` does the same for one answer anywhere else: its data, or a `ProblemError`.
 This package needs no TanStack package itself; bring the adapter for your framework.
+
+## Live data: events and WebSockets
+
+A stream of server-sent events and a WebSocket are no queries: they do not answer once, and
+there is nothing to refetch. `q.events` and `q.ws` make live sources of them, typed from the
+route like everything else, and `@inkanjs/query/react` follows them in a component:
+
+```tsx
+import { useEvents, useSocket } from "@inkanjs/query/react";
+
+// a GET that answers with t.events({ ... })
+const feed = useEvents(q.events("/teas/:id/events", { params: { id } }));
+feed.status;          // "connecting" | "open" | "closed" | "error" ("idle" while not enabled)
+feed.last;            // the last event: feed.last?.event === "brewed" narrows feed.last.data
+feed.byName.brewed;   // the latest data of each event, by name
+feed.error;           // a stream that did not open: a ProblemError, isProblem(feed.error, "tea-not-found")
+
+// an app.ws route: send takes its `message`, last is the last of its `send`
+const room = useSocket(q.ws("/rooms/:room", { params: { room } }), { onMessage: (m) => log(m) });
+room.send({ type: "say", text: "hello" }); // sent while opening, it goes once the socket is open
+room.status; room.last; room.socket;       // the TypedSocket underneath: on, ready, raw
+```
+
+Both open when the component mounts, open again when the path or input changes, and close
+when it unmounts. `enabled: false` keeps them closed. A stream that ends stays closed, and
+one that fails is not opened again unless `retry` says so: `true`, a number of times, or a
+function as for TanStack, so `retry: retry(3)` tries again after a dropped connection or a
+503, not after a 404. `retryDelay` is 1 s, doubling, at most 30 s.
+
+The hooks need `react` (18 or later); nothing else here does. For Vue, Svelte or Solid,
+`follow(source, { onChange, onEvent, retry, signal })` and
+`connect(source, { onChange, onMessage })` are what the hooks run: the same state, handed to
+`onChange` after every change, for a ref or a store of your own.
+
+### Events are not written to the cache
+
+The hooks keep their state themselves and write nothing to the QueryClient: which query an
+event belongs to is the app's to say, and `onEvent` says it in a line. A job's `status` and
+`end` events carry the job as `GET /exports/:id` answers with it, so they can keep that
+query fresh:
+
+```ts
+const queryClient = useQueryClient();
+const job = q.get("/exports/:id", { params: { id } });
+useEvents(q.events("/exports/:id/events", { params: { id } }), {
+  onEvent: (e) => e.event !== "progress" && queryClient.setQueryData(job.queryKey, e.data),
+});
+```
+
+## Recipe: following a job
+
+An `app.job("/exports", ...)` on the server gives `POST /exports` to start one,
+`GET /exports/:id/events` to follow it (`status`, then `progress`, then `end`) and
+`GET /exports/:id/result` for what it made. Start it with a mutation, follow it while it
+runs, and fetch the result once it is done:
+
+```tsx
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { queries } from "@inkanjs/query";
+import { useEvents } from "@inkanjs/query/react";
+
+const q = queries(api);
+
+function Export() {
+  const start = useMutation(q.post("/exports"));
+  const id = start.data?.id; // the job, as the 202 answered with it
+
+  const job = useEvents(q.events("/exports/:id/events", { params: { id: id! } }), { enabled: !!id });
+  const state = job.byName.end?.state ?? job.byName.status?.state;
+
+  const result = useQuery({
+    ...q.get("/exports/:id/result", { params: { id: id! } }),
+    enabled: state === "done",
+  });
+
+  if (!id) return <button onClick={() => start.mutate({ body: { rows: 1000 } })}>Export</button>;
+  if (job.error) return <p>{job.error.message}</p>;
+  if (state === "failed") return <p>{job.byName.end?.error?.detail}</p>;
+  if (result.data) return <a href={result.data.url}>Download</a>;
+  const p = job.byName.progress; // typed from the job's `progress` schema
+  return <progress value={p?.done ?? 0} max={p?.total ?? 1} />;
+}
+```
+
+The stream ends with `end`, so `job.status` turns `closed` by itself; nothing reconnects.
