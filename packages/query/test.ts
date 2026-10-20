@@ -212,7 +212,7 @@ test("follow() stops when told to, and tells nothing after", async () => {
 type Say = { type: "say"; text: string };
 type Said = { type: "said"; room: string; text: string };
 
-test("connect() opens a typed WebSocket, sends before it is open, closes", async () => {
+test("connect() opens a typed WebSocket, sends before it is open, closes", { timeout: 15_000 }, async () => {
   const server = await live.listen(0, "127.0.0.1");
   try {
     const { port } = server.address() as { port: number };
@@ -238,6 +238,9 @@ test("connect() opens a typed WebSocket, sends before it is open, closes", async
     );
     assert.equal(refused.status, "error", "a room name too short is a 400, and no socket");
   } finally {
+    // an upgraded socket is no longer the http server's: close it through the app first, or
+    // server.close() waits for it (forever, on Node 22)
+    await live.stopped();
     server.closeAllConnections();
     await new Promise((r) => server.close(r));
   }
