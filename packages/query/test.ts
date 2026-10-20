@@ -221,6 +221,10 @@ type Said = { type: "said"; room: string; text: string };
 
 test("connect() opens a typed WebSocket, sends before it is open, closes", { timeout: 15_000 }, async () => {
   const server = await live.listen(0, "127.0.0.1");
+  // what the server heard, for the message when a state never comes
+  const heard: string[] = [];
+  server.on("upgrade", (req) => heard.push(`upgrade ${req.method} ${req.url} origin=${req.headers.origin ?? "-"} key=${req.headers["sec-websocket-key"] ? "yes" : "no"} v=${req.httpVersion}`));
+  server.on("request", (req) => heard.push(`request ${req.method} ${req.url} upgrade=${req.headers.upgrade ?? "-"}`));
   try {
     const { port } = server.address() as { port: number };
     const q = queries(client<typeof live>(`http://127.0.0.1:${port}`));
@@ -234,7 +238,9 @@ test("connect() opens a typed WebSocket, sends before it is open, closes", { tim
         void (() => conn.send({ type: "shout", text: "x" }));
       },
       (s) => s.last !== undefined,
-    );
+    ).catch((err: Error) => {
+      throw new Error(`${err.message}; server heard: ${JSON.stringify(heard)}; socket readyState=${conn?.socket.raw.readyState}; listeners=${server.listenerCount("upgrade")}`);
+    });
     assert.deepEqual(said.last, { type: "said", room: "tea", text: "hello" });
     assert.deepEqual(statuses.slice(0, 2), ["connecting", "open"]);
     conn.close();
