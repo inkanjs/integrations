@@ -121,10 +121,17 @@ const live = inkan({ log: false })
 const api = client<typeof live>("http://live.test", { fetch: (url, init) => live.fetch(new Request(url, init)) });
 
 /** Resolves with the first state `check` accepts. */
-function until<S>(start: (onChange: (s: S) => void) => unknown, check: (s: S) => boolean): Promise<S> {
-  return new Promise((resolve) => {
+function until<S>(start: (onChange: (s: S) => void) => unknown, check: (s: S) => boolean, ms = 5_000): Promise<S> {
+  return new Promise((resolve, reject) => {
+    const seen: S[] = [];
+    // fail with what was seen instead of hanging the run
+    const timer = setTimeout(() => reject(new Error(`no state passed the check in ${ms} ms; seen: ${JSON.stringify(seen.map((x) => ({ ...(x as object), socket: undefined, error: (x as { error?: Error }).error?.message })))}`)), ms);
     start((s) => {
-      if (check(s)) resolve(s);
+      seen.push(s);
+      if (check(s)) {
+        clearTimeout(timer);
+        resolve(s);
+      }
     });
   });
 }
