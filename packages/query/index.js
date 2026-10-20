@@ -135,6 +135,10 @@ export function connect(source, options = {}) {
     if (state.status === "connecting") set({ status: "error", error: new Error(`The WebSocket closed before it opened (${code})`) });
     else set({ status: "closed" });
   });
+  // some WebSocket clients (Node 22's) tell a refused handshake only by an error, never a close
+  socket.raw.addEventListener?.("error", () => {
+    if (state.status === "connecting") set({ status: "error", error: new Error("The WebSocket could not open") });
+  });
   return {
     socket,
     send(value) {
