@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.5.0 (unreleased)
+## 0.5.0
 
 - WebSockets go through `app.upgrade()` (inkan 0.9): the app decides the upgrade and runs
   the socket on a transport over uWS's websocket. The stand-in socket that turned the app's

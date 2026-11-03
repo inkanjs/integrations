@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 (unreleased)
+## 0.1.0
 
 - `serve(app, { port, hostname, tls, signals, drain })`: an inkan app on `Bun.serve`. HTTP
   through `app.fetch()`, with the client's address from `server.requestIP()`.
