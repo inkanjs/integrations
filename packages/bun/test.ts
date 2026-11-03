@@ -62,7 +62,8 @@ function raw(port: number, path: string, extra = "", key = randomBytes(16).toStr
       const length = Number(/content-length: *(\d+)/i.exec(text)?.[1] ?? 0);
       if (status === 101 || text.length >= end + 4 + length) finish();
     });
-    sock.on("error", (err) => (done ? undefined : text ? finish() : reject(err)));
+    // a connection cut before any answer (ECONNRESET) is an answer too: status 0
+    sock.on("error", (err: NodeJS.ErrnoException) => (done ? undefined : text || err.code === "ECONNRESET" ? finish() : reject(err)));
     sock.on("close", finish);
   });
 }
