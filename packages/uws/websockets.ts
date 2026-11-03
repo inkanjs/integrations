@@ -416,6 +416,23 @@ export function websockets(serve: typeof Serve) {
     }
   });
 
+  test("uws ws: a handler that closes at once: the client gets its code, the handler's close listener runs", async () => {
+    let heard: number | undefined;
+    const app = inkan(quiet).ws("/now", {}, (socket) => {
+      socket.on("close", (code) => (heard = code));
+      socket.close(4001, "at once");
+    });
+    const s = await served(app);
+    try {
+      const ws = new WebSocket(`${s.url}/now`);
+      assert.deepEqual(await closed(ws), { code: 4001, reason: "at once" });
+      for (let i = 0; i < 50 && heard === undefined; i++) await sleep(10);
+      assert.equal(heard, 4001);
+    } finally {
+      await s.close();
+    }
+  });
+
   test("uws ws: close() ends every open socket with 1001, then runs onClose", async () => {
     const events: string[] = [];
     const app = inkan(quiet)

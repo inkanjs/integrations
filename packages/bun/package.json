@@ -1,0 +1,48 @@
+{
+  "name": "@inkanjs/bun",
+  "version": "0.1.0",
+  "description": "Runs an inkan app on Bun.serve, WebSocket routes on Bun's own websockets.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Vensin (https://github.com/vxnsin)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/inkanjs/integrations.git",
+    "directory": "packages/bun"
+  },
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    }
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "bun": ">=1.1"
+  },
+  "peerDependencies": {
+    "@vxnsin/inkan": ">=0.9.0 <1.0.0"
+  },
+  "scripts": {
+    "test": "node --test test.ts",
+    "test:bun": "bun run test.ts"
+  },
+  "devDependencies": {
+    "@vxnsin/inkan": "^0.9.0"
+  },
+  "keywords": [
+    "inkan",
+    "bun",
+    "bun-serve",
+    "adapter",
+    "websocket"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}
