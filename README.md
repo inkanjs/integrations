@@ -9,12 +9,14 @@ on its own; inkan itself keeps no dependencies.
 | [`@inkanjs/vite`](packages/vite) | The API inside `vite dev` and `vite preview`: one port with the frontend, reloaded on every save. Vue, React, Svelte, Solid. |
 | [`@inkanjs/query`](packages/query) | The typed client for TanStack Query: keys and data from the contract, problems as errors. |
 | [`@inkanjs/uws`](packages/uws) | An inkan app on uWebSockets.js instead of node:http, with HTTPS and a gentle close. |
+| [`@inkanjs/bun`](packages/bun) | An inkan app on Bun.serve, WebSocket routes on Bun's own websockets, with a gentle close. |
 
 Nuxt, SvelteKit, Astro and Remix need no package, see the [recipes](recipes): they hand their server routes a web
 `Request` and want a `Response`, which is what `app.fetch` does.
 
 Every package is tested against the published `@vxnsin/inkan` in CI, on Node 22, 24 and 26,
-and `@inkanjs/next` once more inside a real `next build` and `next start`:
+`@inkanjs/next` once more inside a real `next build` and `next start`, and `@inkanjs/bun`
+under Bun:
 
 ```sh
 npm install
