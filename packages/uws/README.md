@@ -3,9 +3,9 @@
 Runs an [inkan](https://github.com/inkanjs/inkan) app on
 [uWebSockets.js](https://github.com/uNetworking/uWebSockets.js) instead of `node:http`.
 The app does not change: contracts, hooks, plugins, problems, streams and the inspector
-all work as they do with `app.listen()`, and so do WebSocket routes (`app.ws()`, inkan 0.8).
+all work as they do with `app.listen()`, and so do WebSocket routes (`app.ws()`).
 This package only moves bytes between the socket and `app.exchange()`, the one door inkan
-has for any server, and `app.upgradeListener` for WebSockets.
+has for any server, and `app.upgrade()` for WebSockets (inkan 0.9).
 
 ## Install
 
@@ -66,8 +66,9 @@ such a route: 1003), `send` trimmed to its contract (and checked in development)
 resolving once the socket can take more, `ctx.signal` aborted on close, 1011 when the handler
 throws. `close()` ends every open socket with 1001 before the onClose hooks.
 
-uWS does the wire: the handshake, frames, UTF-8, fragments, pongs. The app's frames go out as
-uWS sends, pings and ends; what the client sends reaches the app as one frame per message.
+uWS does the wire: the handshake, frames, UTF-8, fragments, pongs. The app runs the socket on
+the transport this package hands `accept()`: its sends, pings and closes go out as uWS's, and
+what the client sends reaches the app one whole message at a time.
 
 Limits, and where they differ from `app.listen()`:
 
@@ -78,7 +79,7 @@ Limits, and where they differ from `app.listen()`:
 | writing | past 64 KiB waiting in uWS, the next frame waits for uWS's drain; past four times `maxMessage` (1 MiB at least) waiting in all, the socket is cut off with 1008, as with `app.listen()`. uWS never drops a message |
 | reading | uWS cannot pause one socket: messages a handler has not taken yet wait in memory, the client is not slowed down |
 | pings | uWS answers the client's pings itself |
-| `ctx.req` | a stand-in for Node's request (method, url, headers, the socket's address), not an `IncomingMessage` |
+| `ctx.req` | undefined, as on every route here: there is no Node request. `ctx.ip`, `ctx.headers` and `ctx.secure` say what it would |
 
 ## Closing
 

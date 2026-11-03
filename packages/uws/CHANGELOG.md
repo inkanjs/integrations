@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.0 (unreleased)
+
+- WebSockets go through `app.upgrade()` (inkan 0.9): the app decides the upgrade and runs
+  the socket on a transport over uWS's websocket. The stand-in socket that turned the app's
+  frames into uWS sends and back is gone, and so is the stand-in Node request: `ctx.req` is
+  undefined on a WebSocket route, as on every other route here. Nothing changes on the wire.
+- With `tls`, `ctx.secure` and `ctx.protocol` say so, for requests and upgrades alike.
+- Needs inkan 0.9 (peer `>=0.9.0 <1.0.0`).
+
 ## 0.4.0
 
 - WebSocket routes (`app.ws()`) run on uWebSockets.js's websockets. The app decides each
