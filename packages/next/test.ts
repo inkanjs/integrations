@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { inkan, plugin, routes, t } from "@vxnsin/inkan";
+import { inkan, plugin, routes, t } from "@inkanjs/inkan";
 import { createServer, type IncomingMessage } from "node:http";
 import type { AddressInfo } from "node:net";
 import { direct, handlers, pages } from "./index.js";

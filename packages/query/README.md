@@ -10,7 +10,7 @@ npm install @inkanjs/query
 ```
 
 ```ts
-import { client } from "@vxnsin/inkan/client";
+import { client } from "@inkanjs/inkan/client";
 import { queries } from "@inkanjs/query";
 import type { app } from "../server/app";
 

@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { App, Routes } from "@vxnsin/inkan";
-import type { Client, ClientOptions } from "@vxnsin/inkan/client";
+import type { App, Routes } from "@inkanjs/inkan";
+import type { Client, ClientOptions } from "@inkanjs/inkan/client";
 
 type Handler = (request: Request) => Promise<Response>;
 

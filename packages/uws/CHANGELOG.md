@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.1
+
+- Works with `@inkanjs/inkan`, the new name of the core (it was `@vxnsin/inkan`). Install
+  `@inkanjs/inkan` 0.9.2 or later next to it.
+
 ## 0.5.0
 
 - WebSockets go through `app.upgrade()` (inkan 0.9): the app decides the upgrade and runs

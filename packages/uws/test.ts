@@ -10,7 +10,7 @@ import { get } from "node:https";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { inkan, sse, t } from "@vxnsin/inkan";
+import { inkan, sse, t } from "@inkanjs/inkan";
 import { conformance } from "./conformance.ts";
 import { websockets } from "./websockets.ts";
 
@@ -82,7 +82,7 @@ if (installed) {
 
   test("SIGTERM closes it and exits", { timeout: 20_000, skip: process.platform === "win32" && "Windows has no SIGTERM to send" }, async () => {
     const script = `
-      import { inkan } from "@vxnsin/inkan";
+      import { inkan } from "@inkanjs/inkan";
       import { serve } from ${JSON.stringify(new URL("./index.js", import.meta.url).href)};
       const app = inkan({ log: false }).get("/", () => ({})).onClose(() => console.log("onClose"));
       const server = await serve(app, { port: 0, host: "127.0.0.1" });

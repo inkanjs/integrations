@@ -5,7 +5,7 @@
 import assert from "node:assert/strict";
 import { connect } from "node:net";
 import { randomBytes } from "node:crypto";
-import { inkan, sse, t, type App } from "@vxnsin/inkan";
+import { inkan, sse, t, type App } from "@inkanjs/inkan";
 import type { serve as Serve } from "./index.js";
 
 const isBun = typeof (globalThis as { Bun?: unknown }).Bun !== "undefined";

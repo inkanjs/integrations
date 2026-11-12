@@ -20,7 +20,7 @@ npm install --allow-git=all "uWebSockets.js@github:uNetworking/uWebSockets.js#v2
 ## Use
 
 ```ts
-import { inkan } from "@vxnsin/inkan";
+import { inkan } from "@inkanjs/inkan";
 import { serve } from "@inkanjs/uws";
 
 const app = inkan().get("/hello", () => ({ hello: "world" }));

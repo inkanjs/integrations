@@ -4,7 +4,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { inkan, sse, t, type App } from "@vxnsin/inkan";
+import { inkan, sse, t, type App } from "@inkanjs/inkan";
 
 export type Started = { url: string; close: () => Promise<void> };
 

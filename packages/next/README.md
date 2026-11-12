@@ -5,7 +5,7 @@ route handlers, as a Pages Router API route, and as a typed client for Server Co
 Contracts, validation, problems, `/docs` and the inspector all come along.
 
 ```sh
-npm install @vxnsin/inkan @inkanjs/next
+npm install @inkanjs/inkan @inkanjs/next
 ```
 
 The app keeps its routes under `/api`, and its docs, document and inspector too, so every
@@ -13,7 +13,7 @@ link on the docs page points where Next will route it:
 
 ```ts
 // server/app.ts
-import { inkan, routes, t } from "@vxnsin/inkan";
+import { inkan, routes, t } from "@inkanjs/inkan";
 
 const teas = routes().get("/teas/:id", { params: t.object({ id: t.int() }) }, ({ params }) => findTea(params.id));
 

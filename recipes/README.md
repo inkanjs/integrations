@@ -6,7 +6,7 @@ under the prefix the framework routes to it, so every link on the docs page poin
 
 ```ts
 // server/app.ts, the same in every recipe
-import { inkan, plugin, t } from "@vxnsin/inkan";
+import { inkan, plugin, t } from "@inkanjs/inkan";
 
 const api = plugin((app) => {
   app.get("/teas/:id", { params: t.object({ id: t.int() }) }, ({ params }) => findTea(params.id));

@@ -1,4 +1,4 @@
-import { inkan, plugin, t } from "@vxnsin/inkan";
+import { inkan, plugin, t } from "@inkanjs/inkan";
 
 const hello = "world";
 // what the test reads: which app started and stopped, in this process

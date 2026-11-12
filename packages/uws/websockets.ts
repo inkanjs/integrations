@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { connect, type Socket } from "node:net";
 import { randomBytes } from "node:crypto";
-import { inkan, t, type App } from "@vxnsin/inkan";
+import { inkan, t, type App } from "@inkanjs/inkan";
 import type { serve as Serve } from "./index.js";
 
 const quiet = { log: false, gracefulShutdown: false } as const;
