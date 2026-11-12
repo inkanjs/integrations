@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { QueryClient, MutationObserver } from "@tanstack/query-core";
-import { inkan, problem, sse, t } from "@vxnsin/inkan";
-import { client } from "@vxnsin/inkan/client";
+import { inkan, problem, sse, t } from "@inkanjs/inkan";
+import { client } from "@inkanjs/inkan/client";
 import { connect, follow, isProblem, mutation, ProblemError, queries, query, retry } from "./index.js";
 import type { Connection, EventsState, LiveEvents, SocketState } from "./index.js";
 import { useEvents, useSocket } from "./react.js";

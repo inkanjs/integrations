@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1
+
+- Works with `@inkanjs/inkan`, the new name of the core (it was `@vxnsin/inkan`). Install
+  `@inkanjs/inkan` 0.9.2 or later next to it.
+
 ## 0.2.0
 
 - Vite's start shows where the API docs and the inspector are, under its own links.

@@ -5,7 +5,7 @@ and the API on one port, no proxy and no CORS, and the API reloaded on every sav
 for every Vite project: Vue, React, Svelte, Solid, plain TypeScript.
 
 ```sh
-npm install @vxnsin/inkan
+npm install @inkanjs/inkan
 npm install -D @inkanjs/vite
 ```
 
@@ -23,7 +23,7 @@ The app keeps its routes, and its docs, document and inspector, under the prefix
 
 ```ts
 // src/server/app.ts
-import { inkan, routes } from "@vxnsin/inkan";
+import { inkan, routes } from "@inkanjs/inkan";
 
 const teas = routes().get("/teas", () => listTeas());
 
@@ -72,7 +72,7 @@ Pair it with the typed client and every call in the frontend is checked against 
 by the compiler (it sees the routes of a chain and of `mount`):
 
 ```ts
-import { client } from "@vxnsin/inkan/client";
+import { client } from "@inkanjs/inkan/client";
 import type { app } from "../server/app";
 
 const api = client<typeof app>(location.origin);

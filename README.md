@@ -14,7 +14,7 @@ on its own; inkan itself keeps no dependencies.
 Nuxt, SvelteKit, Astro and Remix need no package, see the [recipes](recipes): they hand their server routes a web
 `Request` and want a `Response`, which is what `app.fetch` does.
 
-Every package is tested against the published `@vxnsin/inkan` in CI, on Node 22, 24 and 26,
+Every package is tested against the published `@inkanjs/inkan` in CI, on Node 22, 24 and 26,
 `@inkanjs/next` once more inside a real `next build` and `next start`, and `@inkanjs/bun`
 under Bun:
 

@@ -1,4 +1,4 @@
-import type { Jsonify } from "@vxnsin/inkan/client";
+import type { Jsonify } from "@inkanjs/inkan/client";
 import type { AnyEvent, EventsState, FollowOptions, LiveEvents, LiveSocket, SocketState } from "./index.js";
 
 export type UseEventsOptions<E extends AnyEvent> = FollowOptions<E> & {

@@ -1,5 +1,5 @@
-import type { ProblemBody, Responses, Routes } from "@vxnsin/inkan";
-import type { Answer, Client, EventOf, Input, Jsonify, TypedSocket } from "@vxnsin/inkan/client";
+import type { ProblemBody, Responses, Routes } from "@inkanjs/inkan";
+import type { Answer, Client, EventOf, Input, Jsonify, TypedSocket } from "@inkanjs/inkan/client";
 
 /** What the typed client answers: success or failure, told apart by `ok`. */
 type AnyAnswer = { ok: true; data: unknown } | { ok: false; status: number; problem: unknown };

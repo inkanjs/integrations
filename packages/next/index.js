@@ -9,7 +9,7 @@
 //   import { handlers } from "@inkanjs/next";
 //   export const { GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS } = handlers(app);
 
-import { client } from "@vxnsin/inkan/client";
+import { client } from "@inkanjs/inkan/client";
 
 const METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"];
 const development = () => (process.env.NODE_ENV === "development" ? "127.0.0.1" : undefined);

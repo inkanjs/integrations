@@ -1,4 +1,4 @@
-import { inkan, plugin, t } from "@vxnsin/inkan";
+import { inkan, plugin, t } from "@inkanjs/inkan";
 
 const teas = plugin((p) => {
   p.get("/teas/:id", { params: t.object({ id: t.int() }), response: { 200: t.object({ id: t.int(), name: t.string() }) } }, ({ params }) => ({

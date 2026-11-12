@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.1
+
+- Works with `@inkanjs/inkan`, the new name of the core (it was `@vxnsin/inkan`). Install
+  `@inkanjs/inkan` 0.9.2 or later next to it.
+
 ## 0.3.0
 
 - `q.events(path, input)` and `q.ws(path, input)`: live sources for a route that answers

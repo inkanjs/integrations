@@ -6,7 +6,7 @@ import type { AddressInfo } from "node:net";
 import { createLogger, createServer, preview } from "vite";
 import inkan from "./index.js";
 
-// a copy of the fixture next to this file, so "@vxnsin/inkan" resolves from node_modules
+// a copy of the fixture next to this file, so "@inkanjs/inkan" resolves from node_modules
 const root = mkdtempSync(join(import.meta.dirname, ".tmp-"));
 cpSync(join(import.meta.dirname, "fixture"), root, { recursive: true });
 const events = () => ((globalThis as { inkanEvents?: string[] }).inkanEvents ??= []);

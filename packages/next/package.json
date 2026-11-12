@@ -1,6 +1,6 @@
 {
   "name": "@inkanjs/next",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "An inkan app inside Next.js: App Router route handlers, Pages Router API routes, and a typed client for Server Components.",
   "type": "module",
   "license": "MIT",
@@ -10,8 +10,8 @@
   "exports": { ".": { "types": "./index.d.ts", "default": "./index.js" } },
   "files": ["index.js", "index.d.ts", "README.md", "CHANGELOG.md"],
   "engines": { "node": ">=22.18" },
-  "peerDependencies": { "@vxnsin/inkan": ">=0.4.0" },
-  "devDependencies": { "@vxnsin/inkan": "^0.4.0" },
+  "peerDependencies": { "@inkanjs/inkan": ">=0.4.0" },
+  "devDependencies": { "@inkanjs/inkan": "^0.9.2" },
   "scripts": { "test": "node --test test.ts" },
   "publishConfig": { "access": "public" }
 }

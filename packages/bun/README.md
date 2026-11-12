@@ -9,13 +9,13 @@ problems, streams and the inspector work as they do with `app.listen()`. HTTP go
 ## Install
 
 ```sh
-bun add @vxnsin/inkan @inkanjs/bun
+bun add @inkanjs/inkan @inkanjs/bun
 ```
 
 ## Use
 
 ```ts
-import { inkan, t } from "@vxnsin/inkan";
+import { inkan, t } from "@inkanjs/inkan";
 import { serve } from "@inkanjs/bun";
 
 const app = inkan().get("/teas/:id", { params: t.object({ id: t.int() }) }, ({ params }) => ({ id: params.id }));

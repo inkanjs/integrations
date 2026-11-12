@@ -1,4 +1,4 @@
-import type { App } from "@vxnsin/inkan";
+import type { App } from "@inkanjs/inkan";
 
 export type Served = {
   /** The port it listens on, also when it was asked for 0. */
